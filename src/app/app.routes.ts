@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import { HomeComponent } from './components/pages/home/home.component';
 // import { AboutComponent } from './components/pages/about/about.component';
 import { LoadingComponent } from './shared/components/loading/loading.component';
 import { Login } from './components/pages/login/login';

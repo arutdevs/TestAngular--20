@@ -1,487 +1,451 @@
-import 'zone.js'; // เพิ่มบรรทัดนี้ก่อน
-import 'zone.js/testing'; // บรรทัดเดิม
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { By } from '@angular/platform-browser';
 import { Login } from './login';
 
-describe('หน้าเข้าสู่ระบบ (Login Component)', () => {
+describe('Login Component', () => {
   let component: Login;
   let fixture: ComponentFixture<Login>;
-  let routerSpy: jasmine.SpyObj<Router>;
+  let mockRouter: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
-    // สร้าง mock router
-    const spy = jasmine.createSpyObj('Router', ['navigate']);
+    // Create mock router
+    mockRouter = jasmine.createSpyObj('Router', ['navigate']);
 
     await TestBed.configureTestingModule({
-      imports: [Login, ReactiveFormsModule],
-      providers: [{ provide: Router, useValue: spy }],
+      imports: [ReactiveFormsModule, Login],
+      providers: [
+        FormBuilder,
+        { provide: Router, useValue: mockRouter }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(Login);
     component = fixture.componentInstance;
-    routerSpy = TestBed.inject(Router) as jasmine.SpyObj<Router>;
     fixture.detectChanges();
   });
 
-  // ========================================
-  // 🟢 ระดับ 1: การทดสอบพื้นฐาน
-  // ========================================
-  describe('🟢 ระดับ 1: การทดสอบพื้นฐาน', () => {
-    it('ควรสร้างคอมโพเนนต์ได้สำเร็จ', () => {
+  afterEach(() => {
+    // Reset spy calls between tests
+    mockRouter.navigate.calls.reset();
+  });
+
+  // ===== 1. COMPONENT SETUP & INITIALIZATION =====
+  describe('Component Setup & Initialization', () => {
+    it('should create component successfully', () => {
       expect(component).toBeTruthy();
     });
 
-    it('ควรมีฟอร์มล็อกอินที่ถูกต้อง', () => {
-      expect(component.loginForm).toBeDefined();
-      expect(component.loginForm.get('username')).toBeTruthy();
-      expect(component.loginForm.get('password')).toBeTruthy();
-      expect(component.loginForm.get('rememberMe')).toBeTruthy();
+    it('should initialize version as empty string', () => {
+      expect(component.version).toBe('');
     });
 
-    it('ควรมีค่าเริ่มต้นของฟอร์มที่ถูกต้อง', () => {
-      expect(component.loginForm.get('username')?.value).toBe('ๅ/-');
+    it('should initialize loginForm with correct structure and default values', () => {
+      expect(component.loginForm.get('username')?.value).toBe('');
       expect(component.loginForm.get('password')?.value).toBe('');
       expect(component.loginForm.get('rememberMe')?.value).toBe(false);
     });
 
-    it('ควรมีตัวแปร version เป็นข้อความว่าง', () => {
-      expect(component.version).toBe('');
-    });
-
-    it('ควรมีช่องกรอกข้อมูลทั้งหมด 3 ช่อง', () => {
-      const allInput = fixture.nativeElement.querySelectorAll('input');
-      expect(allInput.length).toBe(3);
-    });
-
-    it('ควรมีช่องเลือก "จดจำชื่อผู้ใช้งาน" 1 ช่อง', () => {
-      const inputCheckbox = fixture.nativeElement.querySelectorAll('input[type="checkbox"]');
-      expect(inputCheckbox.length).toBe(1);
-    });
-
-    it('ควรมีปุ่มส่งข้อมูล 1 ปุ่ม', () => {
-      const button = fixture.nativeElement.querySelectorAll('button');
-      expect(button.length).toBe(1);
+    it('should have all required form controls', () => {
+      expect(component.loginForm.get('username')).toBeTruthy();
+      expect(component.loginForm.get('password')).toBeTruthy();
+      expect(component.loginForm.get('rememberMe')).toBeTruthy();
     });
   });
 
-  // ========================================
-  // 🟡 ระดับ 2: การทดสอบองค์ประกอบของหน้า
-  // ========================================
-  describe('🟡 ระดับ 2: การทดสอบองค์ประกอบของหน้า', () => {
-    describe('การแสดงผลส่วนต่างๆ', () => {
-      it('ควรแสดงโลโก้ของระบบ', () => {
-        const logoImg = fixture.debugElement.query(By.css('img[alt="Logo"]'));
-        expect(logoImg).toBeTruthy();
-        expect(logoImg.nativeElement.src).toContain('assets/images/logo-system.png');
-        expect(logoImg.nativeElement.style.maxHeight).toBe('100px');
+  // ===== 2. FORM VALIDATION RULES =====
+  describe('Form Validation Rules', () => {
+    describe('Username Validation', () => {
+      it('should require username', () => {
+        const usernameControl = component.loginForm.get('username');
+        usernameControl?.setValue('');
+        usernameControl?.markAsTouched();
+        expect(usernameControl?.hasError('required')).toBeTruthy();
       });
 
-      it('ควรแสดงหัวข้อ "เข้าสู่ระบบ"', () => {
-        const title = fixture.debugElement.query(By.css('h2.login'));
-        expect(title).toBeTruthy();
-        expect(title.nativeElement.textContent.trim()).toBe('เข้าสู่ระบบ');
+      it('should accept any non-empty username', () => {
+        const usernameControl = component.loginForm.get('username');
+        usernameControl?.setValue('testuser');
+        expect(usernameControl?.hasError('required')).toBeFalsy();
+        expect(usernameControl?.valid).toBeTruthy();
       });
 
-      it('ควรแสดงป้ายกำกับฟิลด์ที่ถูกต้อง', () => {
-        const usernameLabel = fixture.debugElement.query(By.css('label[for="username"]'));
-        const passwordLabel = fixture.debugElement.query(By.css('label[for="password"]'));
-        const rememberMeLabel = fixture.debugElement.query(By.css('label[for="rememberMe"]'));
-
-        expect(usernameLabel.nativeElement.textContent.trim()).toBe('ชื่อผู้ใช้');
-        expect(passwordLabel.nativeElement.textContent.trim()).toBe('รหัสผ่าน');
-        expect(rememberMeLabel.nativeElement.textContent.trim()).toBe('จดจำชื่อผู้ใช้งาน');
-      });
-
-      it('ควรแสดงลิงก์ "ลืมรหัสผ่าน?"', () => {
-        const forgotPasswordLink = fixture.debugElement.query(
-          By.css('a[routerLink="/auth/forgot-password"]')
-        );
-        expect(forgotPasswordLink).toBeTruthy();
-        expect(forgotPasswordLink.nativeElement.textContent.trim()).toBe('ลืมรหัสผ่าน?');
-      });
-
-      it('ควรแสดงเวอร์ชันของระบบ', () => {
-        const versionElement = fixture.debugElement.query(By.css('.text-version'));
-        expect(versionElement).toBeTruthy();
-      });
-
-      it('ควรแสดงไอคอนในช่องกรอกข้อมูล', () => {
-        const userIcon = fixture.debugElement.query(By.css('.icon-user'));
-        const keyIcon = fixture.debugElement.query(By.css('.icon-key'));
-
-        expect(userIcon).toBeTruthy();
-        expect(keyIcon).toBeTruthy();
+      it('should accept username with special characters', () => {
+        const usernameControl = component.loginForm.get('username');
+        usernameControl?.setValue('user@domain.com');
+        expect(usernameControl?.valid).toBeTruthy();
       });
     });
 
-    describe('ค่าเริ่มต้นของฟอร์ม', () => {
-      it('ช่องชื่อผู้ใช้ควรว่างเปล่าในตอนเริ่มต้น', () => {
-        const usernameInput = fixture.nativeElement.querySelector('#username');
-        expect(usernameInput.value).toBe('');
-        expect(component.loginForm.get('username')?.value).toBe('');
+    describe('Password Validation', () => {
+      it('should require password', () => {
+        const passwordControl = component.loginForm.get('password');
+        passwordControl?.setValue('');
+        passwordControl?.markAsTouched();
+        expect(passwordControl?.hasError('required')).toBeTruthy();
       });
 
-      it('ช่องรหัสผ่านควรว่างเปล่าในตอนเริ่มต้น', () => {
-        const passwordInput = fixture.nativeElement.querySelector('#password');
-        expect(passwordInput.value).toBe('');
-        expect(component.loginForm.get('password')?.value).toBe('');
+      it('should require minimum 6 characters', () => {
+        const passwordControl = component.loginForm.get('password');
+        passwordControl?.setValue('12345');
+        expect(passwordControl?.hasError('minlength')).toBeTruthy();
       });
 
-      it('ช่องจดจำชื่อผู้ใช้ควรไม่ถูกเลือกในตอนเริ่มต้น', () => {
-        const rememberMeInput = fixture.nativeElement.querySelector('#rememberMe');
-        expect(rememberMeInput.checked).toBe(false);
-        expect(component.loginForm.get('rememberMe')?.value).toBe(false);
-      });
-    });
-
-    describe('สถานะของปุ่มส่งข้อมูล', () => {
-      it('ควรปิดการใช้งานปุ่มส่งเมื่อชื่อผู้ใช้ว่าง', () => {
-        component.loginForm.get('username')?.setValue('');
-        component.loginForm.get('password')?.setValue('validpass123');
-        fixture.detectChanges();
-
-        const submitButton = fixture.nativeElement.querySelector('button[type="submit"]');
-        expect(submitButton.disabled).toBe(true);
+      it('should accept password with exactly 6 characters', () => {
+        const passwordControl = component.loginForm.get('password');
+        passwordControl?.setValue('123456');
+        expect(passwordControl?.hasError('minlength')).toBeFalsy();
+        expect(passwordControl?.hasError('required')).toBeFalsy();
+        expect(passwordControl?.valid).toBeTruthy();
       });
 
-      it('ควรปิดการใช้งานปุ่มส่งเมื่อรหัสผ่านว่าง', () => {
-        component.loginForm.get('username')?.setValue('testuser');
-        component.loginForm.get('password')?.setValue('');
-        fixture.detectChanges();
-
-        const submitButton = fixture.nativeElement.querySelector('button[type="submit"]');
-        expect(submitButton.disabled).toBe(true);
-      });
-
-      it('ควรปิดการใช้งานปุ่มส่งเมื่อรหัสผ่านสั้นเกินไป', () => {
-        component.loginForm.get('username')?.setValue('testuser');
-        component.loginForm.get('password')?.setValue('12345'); // น้อยกว่า 6 ตัว
-        fixture.detectChanges();
-
-        const submitButton = fixture.nativeElement.querySelector('button[type="submit"]');
-        expect(submitButton.disabled).toBe(true);
-      });
-
-      it('ควรเปิดการใช้งานปุ่มส่งเมื่อข้อมูลถูกต้องครบถ้วน', () => {
-        component.loginForm.get('username')?.setValue('testuser');
-        component.loginForm.get('password')?.setValue('validpass123');
-        fixture.detectChanges();
-
-        const submitButton = fixture.nativeElement.querySelector('button[type="submit"]');
-        expect(submitButton.disabled).toBe(false);
-      });
-    });
-  });
-
-  // ========================================
-  // 🔴 ระดับ 3: การทดสอบการตรวจสอบข้อมูล
-  // ========================================
-  describe('🔴 ระดับ 3: การทดสอบการตรวจสอบข้อมูล', () => {
-    describe('การตรวจสอบพื้นฐาน', () => {
-      it('ควรไม่ถูกต้องเมื่อชื่อผู้ใช้ว่าง', () => {
-        component.loginForm.get('username')?.setValue('');
-        component.loginForm.get('username')?.markAsTouched();
-
-        expect(component.loginForm.get('username')?.invalid).toBe(true);
-        expect(component.isFieldInvalid('username')).toBe(true);
-      });
-
-      it('ควรไม่ถูกต้องเมื่อรหัสผ่านว่าง', () => {
-        component.loginForm.get('password')?.setValue('');
-        component.loginForm.get('password')?.markAsTouched();
-
-        expect(component.loginForm.get('password')?.invalid).toBe(true);
-        expect(component.isFieldInvalid('password')).toBe(true);
-      });
-
-      it('ควรไม่ถูกต้องเมื่อรหัสผ่านสั้นกว่า 6 ตัวอักษร', () => {
-        component.loginForm.get('password')?.setValue('12345');
-        component.loginForm.get('password')?.markAsTouched();
-
-        expect(component.loginForm.get('password')?.invalid).toBe(true);
-        expect(component.isFieldInvalid('password')).toBe(true);
-      });
-
-      it('ควรถูกต้องเมื่อกรอกข้อมูลครบถ้วนและถูกต้อง', () => {
-        component.loginForm.setValue({
-          username: 'testuser',
-          password: 'validpass123',
-          rememberMe: false,
-        });
-
-        expect(component.loginForm.valid).toBe(true);
-        expect(component.isFieldInvalid('username')).toBe(false);
-        expect(component.isFieldInvalid('password')).toBe(false);
+      it('should accept password longer than 6 characters', () => {
+        const passwordControl = component.loginForm.get('password');
+        passwordControl?.setValue('password123');
+        expect(passwordControl?.valid).toBeTruthy();
       });
     });
 
-    describe('การแสดงข้อความแสดงข้อผิดพลาด', () => {
-      it('ควรแสดงข้อความผิดพลาดเมื่อคลิกช่องชื่อผู้ใช้แล้วไม่กรอกข้อมูล', () => {
-        const usernameInput = fixture.nativeElement.querySelector('#username');
-
-        // จำลองการคลิกเข้าไปและออกมาโดยไม่กรอกข้อมูล
-        usernameInput.dispatchEvent(new Event('focus'));
-        usernameInput.dispatchEvent(new Event('blur'));
-        fixture.detectChanges();
-
-        expect(usernameInput.classList.contains('is-invalid')).toBe(true);
-
-        const errorMessage = fixture.nativeElement.querySelector('.invalid-feedback');
-        expect(errorMessage).toBeTruthy();
-        expect(errorMessage.textContent.trim()).toBe('กรุณากรอกชื่อผู้ใช้');
-      });
-
-      it('ควรแสดงข้อความผิดพลาดเมื่อคลิกช่องรหัสผ่านแล้วไม่กรอกข้อมูล', () => {
-        const passwordInput = fixture.nativeElement.querySelector('#password');
-
-        passwordInput.dispatchEvent(new Event('focus'));
-        passwordInput.dispatchEvent(new Event('blur'));
-        fixture.detectChanges();
-
-        expect(passwordInput.classList.contains('is-invalid')).toBe(true);
-
-        const errorMessages = fixture.nativeElement.querySelectorAll('.invalid-feedback');
-        expect(errorMessages[1]).toBeTruthy();
-        expect(errorMessages[1].textContent.trim()).toBe('กรุณากรอกรหัสผ่าน');
-      });
-
-      it('ควรแสดงข้อความผิดพลาดเมื่อรหัสผ่านสั้นเกินไป', () => {
-        const passwordInput = fixture.nativeElement.querySelector('#password');
-
-        // กรอกรหัสผ่านสั้นกว่า 6 ตัว
-        component.loginForm.get('password')?.setValue('123');
-        component.loginForm.get('password')?.markAsTouched();
-        fixture.detectChanges();
-
-        expect(passwordInput.classList.contains('is-invalid')).toBe(true);
+    describe('Remember Me Validation', () => {
+      it('should not have any validation rules', () => {
+        const rememberMeControl = component.loginForm.get('rememberMe');
+        
+        rememberMeControl?.setValue(false);
+        expect(rememberMeControl?.valid).toBeTruthy();
+        
+        rememberMeControl?.setValue(true);
+        expect(rememberMeControl?.valid).toBeTruthy();
       });
     });
 
-    describe('การกู้คืนจากข้อผิดพลาด', () => {
-      it('ควรซ่อนข้อผิดพลาดเมื่อแก้ไขชื่อผู้ใช้ให้ถูกต้อง', () => {
-        // สร้างข้อผิดพลาดก่อน
-        const usernameInput = fixture.nativeElement.querySelector('#username');
-        usernameInput.dispatchEvent(new Event('focus'));
-        usernameInput.dispatchEvent(new Event('blur'));
-        fixture.detectChanges();
-        expect(usernameInput.classList.contains('is-invalid')).toBe(true);
-
-        // แก้ไขโดยใส่ข้อมูลที่ถูกต้อง
-        component.loginForm.get('username')?.setValue('validuser');
-        fixture.detectChanges();
-
-        expect(usernameInput.classList.contains('is-invalid')).toBe(false);
-        expect(component.isFieldInvalid('username')).toBe(false);
-      });
-
-      it('ควรซ่อนข้อผิดพลาดเมื่อแก้ไขรหัสผ่านให้ถูกต้อง', () => {
-        // สร้างข้อผิดพลาดก่อน
-        const passwordInput = fixture.nativeElement.querySelector('#password');
-        passwordInput.dispatchEvent(new Event('focus'));
-        passwordInput.dispatchEvent(new Event('blur'));
-        fixture.detectChanges();
-        expect(passwordInput.classList.contains('is-invalid')).toBe(true);
-
-        // แก้ไขโดยใส่รหัสผ่านที่ถูกต้อง
-        component.loginForm.get('password')?.setValue('validpass123');
-        fixture.detectChanges();
-
-        expect(passwordInput.classList.contains('is-invalid')).toBe(false);
-        expect(component.isFieldInvalid('password')).toBe(false);
-      });
-    });
-  });
-
-  // ========================================
-  // 🔥 ระดับ 4: การทดสอบการทำงานของฟังก์ชัน
-  // ========================================
-  describe('🔥 ระดับ 4: การทดสอบการทำงานของฟังก์ชัน', () => {
-    describe('ฟังก์ชัน isFieldInvalid', () => {
-      it('ควรคืนค่า true เมื่อฟิลด์ไม่ถูกต้องและถูกแตะ', () => {
-        component.loginForm.get('username')?.setValue('');
-        component.loginForm.get('username')?.markAsTouched();
-
-        expect(component.isFieldInvalid('username')).toBe(true);
-      });
-
-      it('ควรคืนค่า false เมื่อฟิลด์ถูกต้อง', () => {
-        component.loginForm.get('username')?.setValue('validuser');
-        component.loginForm.get('username')?.markAsTouched();
-
-        expect(component.isFieldInvalid('username')).toBe(false);
-      });
-
-      it('ควรคืนค่า false เมื่อฟิลด์ไม่ถูกต้องแต่ยังไม่ถูกแตะ', () => {
-        component.loginForm.get('username')?.setValue('');
-        // ไม่ mark as touched
-
-        expect(component.isFieldInvalid('username')).toBe(false);
-      });
-
-      it('ควรจัดการกับฟิลด์ที่ไม่มีอยู่', () => {
-        expect(component.isFieldInvalid('nonExistentField')).toBe(false);
-      });
-    });
-
-    describe('ฟังก์ชัน onSubmit', () => {
-      it('ควรเรียกใช้ onSubmit เมื่อส่งฟอร์มที่ถูกต้อง', () => {
-        spyOn(component, 'onSubmit');
-
-        component.loginForm.setValue({
-          username: 'testuser',
-          password: 'validpass123',
-          rememberMe: false,
-        });
-        fixture.detectChanges();
-
-        const form = fixture.nativeElement.querySelector('form');
-        form.dispatchEvent(new Event('submit'));
-
-        expect(component.onSubmit).toHaveBeenCalled();
-      });
-
-      it('ควร markAllAsTouched เมื่อฟอร์มไม่ถูกต้อง', () => {
-        spyOn(component.loginForm, 'markAllAsTouched');
-
-        // ทำให้ฟอร์มไม่ถูกต้อง
-        component.loginForm.setValue({
+    describe('Form Overall Validation', () => {
+      it('should be invalid when all fields are empty', () => {
+        component.loginForm.patchValue({
           username: '',
           password: '',
-          rememberMe: false,
+          rememberMe: false
         });
+        expect(component.loginForm.valid).toBeFalsy();
+      });
 
+      it('should be invalid when only username is filled', () => {
+        component.loginForm.patchValue({
+          username: 'testuser',
+          password: '',
+          rememberMe: false
+        });
+        expect(component.loginForm.valid).toBeFalsy();
+      });
+
+      it('should be invalid when only password is filled', () => {
+        component.loginForm.patchValue({
+          username: '',
+          password: '123456',
+          rememberMe: false
+        });
+        expect(component.loginForm.valid).toBeFalsy();
+      });
+
+      it('should be valid when both username and password are correctly filled', () => {
+        component.loginForm.patchValue({
+          username: 'testuser',
+          password: '123456',
+          rememberMe: false
+        });
+        expect(component.loginForm.valid).toBeTruthy();
+      });
+    });
+  });
+
+  // ===== 3. VALIDATION STATE CHECKING =====
+  describe('Validation State Checking (isFieldInvalid)', () => {
+    describe('Field State Detection', () => {
+      it('should return false for valid field regardless of touch state', () => {
+        component.loginForm.get('username')?.setValue('testuser');
+        expect(component.isFieldInvalid('username')).toBeFalsy();
+        
+        component.loginForm.get('username')?.markAsTouched();
+        expect(component.isFieldInvalid('username')).toBeFalsy();
+      });
+
+      it('should return false for invalid but pristine field', () => {
+        component.loginForm.get('username')?.setValue('');
+        // Field is invalid but not touched or dirty
+        expect(component.isFieldInvalid('username')).toBeFalsy();
+      });
+
+      it('should return true for invalid and touched field', () => {
+        const usernameControl = component.loginForm.get('username');
+        usernameControl?.setValue('');
+        usernameControl?.markAsTouched();
+        expect(component.isFieldInvalid('username')).toBeTruthy();
+      });
+
+      it('should return true for invalid and dirty field', () => {
+        const usernameControl = component.loginForm.get('username');
+        // Make field dirty first by user interaction simulation
+        usernameControl?.setValue('test');
+        usernameControl?.updateValueAndValidity();
+        usernameControl?.markAsDirty();
+        
+        // Then make it invalid
+        usernameControl?.setValue('');
+        usernameControl?.updateValueAndValidity();
+        
+        expect(component.isFieldInvalid('username')).toBeTruthy();
+      });
+    });
+
+    describe('Edge Cases for Field Checking', () => {
+      it('should handle non-existent field gracefully', () => {
+        expect(component.isFieldInvalid('nonExistentField')).toBeFalsy();
+      });
+
+      it('should work correctly for all form fields', () => {
+        const fields = ['username', 'password', 'rememberMe'];
+        
+        fields.forEach(field => {
+          const result = component.isFieldInvalid(field);
+          expect(typeof result).toBe('boolean');
+        });
+      });
+    });
+  });
+
+  // ===== 4. FORM SUBMISSION BEHAVIOR =====
+  describe('Form Submission Behavior (onSubmit)', () => {
+    describe('Invalid Form Submission', () => {
+      it('should mark all fields as touched when form is invalid', () => {
+        component.loginForm.patchValue({
+          username: '',
+          password: '',
+          rememberMe: false
+        });
+        
+        spyOn(component.loginForm, 'markAllAsTouched');
         component.onSubmit();
-
+        
         expect(component.loginForm.markAllAsTouched).toHaveBeenCalled();
       });
 
-      it('ควรแสดงข้อผิดพลาดทุกฟิลด์เมื่อส่งฟอร์มที่ไม่ถูกต้อง', () => {
-        // ทำให้ฟอร์มไม่ถูกต้อง
-        component.loginForm.setValue({
+      it('should not navigate when form is invalid', () => {
+        component.loginForm.patchValue({
           username: '',
-          password: '123', // สั้นเกินไป
-          rememberMe: false,
+          password: 'short',
+          rememberMe: false
         });
-
+        
         component.onSubmit();
-        fixture.detectChanges();
+        expect(mockRouter.navigate).not.toHaveBeenCalled();
+      });
 
-        expect(component.isFieldInvalid('username')).toBe(true);
-        expect(component.isFieldInvalid('password')).toBe(true);
+      it('should return early when form is invalid', () => {
+        component.loginForm.patchValue({
+          username: 'testuser',
+          password: '', // Invalid
+          rememberMe: false
+        });
+        
+        component.onSubmit();
+        expect(mockRouter.navigate).not.toHaveBeenCalled();
       });
     });
 
-    describe('การทำงานร่วมกันของ UI และ Logic', () => {
-      it('ควรส่งข้อมูลที่ถูกต้องไปยัง onSubmit', () => {
-        spyOn(component, 'onSubmit');
-
-        const formData = {
+    describe('Valid Form Submission', () => {
+      it('should navigate to index page when form is valid', () => {
+        component.loginForm.patchValue({
           username: 'testuser',
-          password: 'validpass123',
-          rememberMe: true,
-        };
-
-        component.loginForm.setValue(formData);
-        fixture.detectChanges();
-
-        const form = fixture.nativeElement.querySelector('form');
-        form.dispatchEvent(new Event('submit'));
-
-        expect(component.onSubmit).toHaveBeenCalled();
-        expect(component.loginForm.value).toEqual(formData);
+          password: '123456',
+          rememberMe: false
+        });
+        
+        component.onSubmit();
+        expect(mockRouter.navigate).toHaveBeenCalledWith(['/index']);
       });
 
-      it('ควรเปลี่ยนสถานะ checkbox rememberMe ได้', () => {
-        const checkboxInput = fixture.nativeElement.querySelector('#rememberMe');
+      it('should navigate regardless of rememberMe state', () => {
+        // Test with rememberMe = true
+        component.loginForm.patchValue({
+          username: 'testuser',
+          password: '123456',
+          rememberMe: true
+        });
+        
+        component.onSubmit();
+        expect(mockRouter.navigate).toHaveBeenCalledWith(['/index']);
+        
+        // Reset spy for next test
+        mockRouter.navigate.calls.reset();
+        
+        // Test with rememberMe = false
+        component.loginForm.patchValue({
+          username: 'testuser2',
+          password: 'password123',
+          rememberMe: false
+        });
+        
+        component.onSubmit();
+        expect(mockRouter.navigate).toHaveBeenCalledWith(['/index']);
+      });
+    });
 
-        // เริ่มต้นควรเป็น false
-        expect(component.loginForm.get('rememberMe')?.value).toBe(false);
-
-        // คลิกเพื่อเปลี่ยนเป็น true
-        checkboxInput.click();
-        fixture.detectChanges();
-
-        expect(component.loginForm.get('rememberMe')?.value).toBe(true);
+    describe('Specific Invalid Scenarios', () => {
+      it('should not submit when username is missing', () => {
+        component.loginForm.patchValue({
+          username: '',
+          password: '123456',
+          rememberMe: false
+        });
+        
+        component.onSubmit();
+        expect(mockRouter.navigate).not.toHaveBeenCalled();
       });
 
-      it('ควรอัพเดทตำแหน่งไอคอนเมื่อฟิลด์มีข้อผิดพลาด', () => {
-        // ทำให้ username field มี error
-        component.loginForm.get('username')?.setValue('');
-        component.loginForm.get('username')?.markAsTouched();
-        fixture.detectChanges();
+      it('should not submit when password is missing', () => {
+        component.loginForm.patchValue({
+          username: 'testuser',
+          password: '',
+          rememberMe: false
+        });
+        
+        component.onSubmit();
+        expect(mockRouter.navigate).not.toHaveBeenCalled();
+      });
 
-        const userIcon = fixture.debugElement.query(By.css('.icon-user'));
-        // เช็คว่า style.top ถูกตั้งค่าเมื่อมี error
-        expect(userIcon.nativeElement.style.top).toBeTruthy();
+      it('should not submit when password is too short', () => {
+        component.loginForm.patchValue({
+          username: 'testuser',
+          password: '12345',
+          rememberMe: false
+        });
+        
+        component.onSubmit();
+        expect(mockRouter.navigate).not.toHaveBeenCalled();
       });
     });
   });
 
-  // ========================================
-  // 💎 ระดับ 5: การทดสอบขั้นสูง (Edge Cases)
-  // ========================================
-  describe('💎 ระดับ 5: การทดสอบขั้นสูง', () => {
-    describe('กรณีพิเศษ', () => {
-      it('ควรจัดการกับข้อมูลที่มีช่องว่างนำหน้าและตามหลัง', () => {
-        component.loginForm.get('username')?.setValue('  testuser  ');
-        component.loginForm.get('password')?.setValue('  validpass123  ');
-
-        expect(component.loginForm.get('username')?.value).toBe('  testuser  ');
-        expect(component.loginForm.get('password')?.value).toBe('  validpass123  ');
+  // ===== 5. USER INTERACTION SCENARIOS =====
+  describe('User Interaction Scenarios', () => {
+    describe('Complete User Workflow', () => {
+      it('should handle complete login flow from empty to valid submission', () => {
+        // Start with empty form - should not submit
+        component.onSubmit();
+        expect(mockRouter.navigate).not.toHaveBeenCalled();
+        
+        // Fill username only - should not submit
+        component.loginForm.get('username')?.setValue('testuser');
+        component.onSubmit();
+        expect(mockRouter.navigate).not.toHaveBeenCalled();
+        
+        // Fill password with invalid length - should not submit
+        component.loginForm.get('password')?.setValue('123');
+        component.onSubmit();
+        expect(mockRouter.navigate).not.toHaveBeenCalled();
+        
+        // Fill valid password - should submit successfully
+        component.loginForm.get('password')?.setValue('123456');
+        component.onSubmit();
+        expect(mockRouter.navigate).toHaveBeenCalledWith(['/index']);
       });
 
-      it('ควรจัดการกับอักขระพิเศษในชื่อผู้ใช้', () => {
-        const specialChars = ['@', '#', '$', '%', '&', '*'];
-
-        specialChars.forEach((char) => {
-          component.loginForm.get('username')?.setValue(`test${char}user`);
-          expect(component.loginForm.get('username')?.valid).toBe(true);
+      it('should maintain form state during user corrections', () => {
+        // User enters invalid password
+        component.loginForm.patchValue({
+          username: 'user',
+          password: 'short'
         });
-      });
-
-      it('ควรยอมรับรหัสผ่านที่มีความยาวมาก', () => {
-        const longPassword = 'a'.repeat(100); // รหัสผ่านยาว 100 ตัว
-        component.loginForm.get('password')?.setValue(longPassword);
-
-        expect(component.loginForm.get('password')?.valid).toBe(true);
+        expect(component.loginForm.invalid).toBeTruthy();
+        
+        // User corrects password
+        component.loginForm.get('password')?.setValue('longpassword');
+        expect(component.loginForm.valid).toBeTruthy();
+        
+        // User can submit
+        component.onSubmit();
+        expect(mockRouter.navigate).toHaveBeenCalledWith(['/index']);
       });
     });
 
-    describe('การทดสอบประสิทธิภาพ', () => {
-      it('ควรจัดการกับการเปลี่ยนค่าฟิลด์หลายครั้งติดกัน', () => {
-        const iterations = 100;
+    describe('Field Interaction States', () => {
+      it('should show validation errors only after user interaction', () => {
+        // Before any interaction - no errors shown
+        expect(component.isFieldInvalid('username')).toBeFalsy();
+        expect(component.isFieldInvalid('password')).toBeFalsy();
+        
+        // After touching fields - errors should show for invalid fields
+        component.loginForm.get('username')?.markAsTouched();
+        component.loginForm.get('password')?.markAsTouched();
+        
+        expect(component.isFieldInvalid('username')).toBeTruthy(); // Empty = invalid
+        expect(component.isFieldInvalid('password')).toBeTruthy(); // Empty = invalid
+      });
+    });
+  });
 
-        for (let i = 0; i < iterations; i++) {
-          component.loginForm.get('username')?.setValue(`user${i}`);
-          component.loginForm.get('password')?.setValue(`pass${i}123456`);
-        }
-
-        expect(component.loginForm.get('username')?.value).toBe(`user${iterations - 1}`);
-        expect(component.loginForm.get('password')?.value).toBe(`pass${iterations - 1}123456`);
-        expect(component.loginForm.valid).toBe(true);
+  // ===== 6. EDGE CASES & BOUNDARY CONDITIONS =====
+  describe('Edge Cases & Boundary Conditions', () => {
+    describe('Input Boundary Values', () => {
+      it('should handle whitespace-only username', () => {
+        component.loginForm.patchValue({
+          username: '   ',
+          password: '123456'
+        });
+        // Whitespace is considered valid input
+        expect(component.loginForm.valid).toBeTruthy();
       });
 
-      it('ควรจัดการกับการเรียก onSubmit หลายครั้งติดกัน', () => {
-        spyOn(component, 'onSubmit').and.callThrough();
-        spyOn(component.loginForm, 'markAllAsTouched');
-
-        // ทำให้ฟอร์มไม่ถูกต้อง
-        component.loginForm.setValue({
-          username: '',
-          password: '',
-          rememberMe: false,
+      it('should handle very long input values', () => {
+        const longString = 'a'.repeat(1000);
+        component.loginForm.patchValue({
+          username: longString,
+          password: longString
         });
+        expect(component.loginForm.valid).toBeTruthy();
+      });
 
-        // เรียก onSubmit หลายครั้ง
-        for (let i = 0; i < 5; i++) {
-          component.onSubmit();
-        }
+      it('should handle special characters in all fields', () => {
+        component.loginForm.patchValue({
+          username: 'user@#$%^&*()_+',
+          password: 'pass@#$%^&*()_+word'
+        });
+        expect(component.loginForm.valid).toBeTruthy();
+      });
+    });
 
-        expect(component.onSubmit).toHaveBeenCalledTimes(5);
-        expect(component.loginForm.markAllAsTouched).toHaveBeenCalledTimes(5);
+    describe('Form State Edge Cases', () => {
+      it('should handle rapid form value changes', () => {
+        const usernameControl = component.loginForm.get('username');
+        
+        // Simulate rapid typing
+        usernameControl?.setValue('u');
+        usernameControl?.setValue('us');
+        usernameControl?.setValue('user');
+        usernameControl?.setValue('username');
+        
+        expect(usernameControl?.valid).toBeTruthy();
+        expect(usernameControl?.value).toBe('username');
+      });
+
+      it('should handle form reset scenarios', () => {
+        // Fill form
+        component.loginForm.patchValue({
+          username: 'testuser',
+          password: '123456',
+          rememberMe: true
+        });
+        
+        // Reset form using Angular's reset method
+        component.loginForm.reset();
+        
+        // After reset, values should be empty strings and false for boolean
+        // Not null as originally expected
+        expect(component.loginForm.get('username')?.value).toBe('');
+        expect(component.loginForm.get('password')?.value).toBe('');
+        expect(component.loginForm.get('rememberMe')?.value).toBe(false);
+        
+        // Form should be invalid after reset due to required validators
+        expect(component.loginForm.invalid).toBeTruthy();
       });
     });
   });

@@ -1,8 +1,8 @@
 // ============================================
-// 1. Import Zone.js สำหรับ Testing
+// 1. Import Zone.js Core ก่อน (สำคัญมาก!)
 // ============================================
-// Zone.js เป็นไลบรารีที่ Angular ใช้ในการจัดการ async operations
-// ต้องมีใน testing environment เพื่อให้ signals และ effects ทำงานได้
+// ต้อง import zone.js ก่อน zone.js/testing
+import 'zone.js';
 import 'zone.js/testing';
 
 // ============================================
@@ -50,12 +50,7 @@ const context = require.context('./', true, /\.spec\.ts$/);
 context.keys().forEach(context);
 
 // ============================================
-// สิ่งที่ไฟล์นี้ทำ:
+// การเปลี่ยนแปลง:
 // ============================================
-// 1. ตั้งค่า Zone.js เพื่อให้ Angular signals/effects ทำงานใน test
-// 2. เริ่มต้น Angular testing framework
-// 3. ค้นหาและรันไฟล์ .spec.ts ทั้งหมดใน project
-// 4. ทำให้ Karma สามารถรัน test ได้
-//
-// ไฟล์นี้จะถูกเรียกโดย Karma ก่อนที่จะรัน test ใดๆ
-// และเป็น entry point สำหรับการ testing ทั้งหมด
+// เพิ่ม import 'zone.js'; ก่อน import 'zone.js/testing';
+// เพื่อให้ Zone.js core ถูกโหลดก่อน testing utilities

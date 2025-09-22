@@ -1,10 +1,18 @@
-import { Component, effect, inject, OnInit, runInInjectionContext, signal } from '@angular/core';
+import { 
+  Component, 
+  computed, 
+  effect, 
+  inject, 
+  Injector, 
+  runInInjectionContext, 
+  signal
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
-  EmployeeInfoListModel,
+  JsonPlaceholderUser,
   UserManagementService,
 } from '../../../services/usermanagement.service';
-import { single } from 'rxjs';
+
 @Component({
   selector: 'app-index',
   imports: [CommonModule],
@@ -12,21 +20,46 @@ import { single } from 'rxjs';
   styleUrl: './index.scss',
 })
 export class Index {
-  employeeList = signal<EmployeeInfoListModel[]>([]);
+  userList = signal<JsonPlaceholderUser[]>([]);
+  usersResource = signal<any>(null);
+  
   private userService = inject(UserManagementService);
+  private injector = inject(Injector); // ⭐ เพิ่มตัวนี้
 
-  userResource = this.userService.getEmployeeResource({ empstatus: '' });
+  dataEffect = effect(() => {
+    const resource = this.usersResource();
+    if (!resource) return;
 
-  // ✅ effect ถูกสร้างใน injection context (field initializer)
-  logEffect = effect(() => {
-    if (this.userResource.hasValue()) {
-      const response = this.userResource.value();
-      if (response?.success) {
-        this.employeeList.set(response.data);
-      }
+    switch (resource.status()) {
+      case 'loading':
+        console.log('กำลังโหลดข้อมูล...');
+        break;
+      case 'resolved':
+        const users = resource.value();
+        this.userList.set(users || []);
+        console.log('Users loaded:', users?.length ?? 0);
+        break;
+      case 'error':
+        console.error('Error:', resource.error());
+        break;
     }
-
-    console.log('Status:', this.userResource.status());
-    console.log('Loading:', this.userResource.isLoading());
   });
+
+  // ⭐ แก้ไข loadData method
+  loadData() {
+    console.log('🚀 สร้าง resource และโหลดข้อมูล...');
+    
+    // ใช้ runInInjectionContext
+    runInInjectionContext(this.injector, () => {
+      const resource = this.userService.getUsersResource();
+      this.usersResource.set(resource);
+    });
+  }
+
+  refreshData() {
+    const resource = this.usersResource();
+    if (resource) {
+      resource.reload();
+    }
+  }
 }

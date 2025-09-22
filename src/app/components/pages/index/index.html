@@ -1,47 +1,228 @@
 <div class="table-responsive line-border-top mb-3">
-    <table class="table table-striped table-hover mt-2 table-borderless align-middle">
-        <thead class="table-light">
-            <tr class="text-center">
-                <th scope="col">ลำดับ</th>
-                <th scope="col" [width]="150">รหัสพนักงาน</th>
-                <th scope="col">ชื่อ-นามสกุล</th>
-                <th scope="col">ตำแหน่ง</th>
-                <th scope="col">แผนก</th>
-                <th scope="col">ฝ่าย</th>
+    <!-- ปุ่มโหลดข้อมูล -->
+    <div class="mb-3 text-center">
+        <button class="btn btn-primary" (click)="loadData()">
+            📊 โหลดข้อมูลผู้ใช้
+        </button>
+        <button class="btn btn-secondary ms-2" (click)="refreshData()" [disabled]="!usersResource()">
+            🔄 รีโหลด
+        </button>
+    </div>
 
-                <th scope="col">ประเภท</th>
-                <th scope="col">Email</th>
-                <th scope="col">สถานะ</th>
-                <th scope="col" [width]="50"></th>
-            </tr>
-        </thead>
-        <tbody>
-            @for (item of employeeList(); track item.empcode; let i = $index) {
-            <tr>
-                <td class="center-middle">{{ i + 1 }}</td>
-                <td class="center-middle">{{ item.empcode }}</td>
-                <td class="left-middle">{{ item.empnamelocal }} {{ item.empsurnamelocal }}</td>
-                <td class="left-middle">{{ item.emppositionlocal }}</td>
-                <td class="left-middle">{{ item.empdepartmentlocal }}</td>
-                <td class="left-middle">{{ item.empdivisionlocal }}</td>
-                <td class="center-middle">{{ item.emptypename }}</td>
-                <td class="left-middle">{{ item.empemail }}</td>
-                <td class="center-middle ">
-                    <span [ngClass]="{
-        'border-in': item.empstatus === '01',
-        'border-stay': item.empstatus === '02',
-        'border-out': item.empstatus === '03',
-        'border-unknown': item.empstatus !== '01' && item.empstatus !== '02' && item.empstatus !== '03'
-      }">
-                        {{ item.empstatus === '01' ? 'พนักงาน' : item.empstatus === '02' ? 'พักงาน' : item.empstatus ===
-                        '03' ? 'ลาออก' : 'ไม่ระบุ' }}
-                    </span>
-                </td>
-                <td class="center-middle">
-                    <i class="icon-btn icon-edit"></i>
-                </td>
-            </tr>
-            }
-        </tbody>
-    </table>
+    <!-- Loading State -->
+    @if (usersResource()?.isLoading()) {
+        <div class="text-center p-4">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2">กำลังโหลดข้อมูล...</p>
+        </div>
+    }
+
+    <!-- Error State -->
+    @else if (usersResource()?.status() === 'error') {
+        <div class="alert alert-danger text-center">
+            <i class="bi bi-exclamation-triangle"></i>
+            เกิดข้อผิดพลาดในการโหลดข้อมูล
+            <button class="btn btn-outline-danger btn-sm ms-2" (click)="refreshData()">
+                ลองใหม่
+            </button>
+        </div>
+    }
+
+    <!-- Table -->
+    @else if (userList().length > 0) {
+        <table class="table table-striped table-hover mt-2 table-borderless align-middle">
+            <thead class="table-light">
+                <tr class="text-center">
+                    <th scope="col" width="80">ลำดับ</th>
+                    <th scope="col" width="150">ID</th>
+                    <th scope="col">ชื่อ-Username</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">ที่อยู่</th>
+                    <th scope="col">โทรศัพท์</th>
+                    <th scope="col">เว็บไซต์</th>
+                    <th scope="col">บริษัท</th>
+                    <th scope="col" width="80">จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (item of userList(); track item.id; let i = $index) {
+                <tr>
+                    <td class="text-center">{{ i + 1 }}</td>
+                    <td class="text-center">
+                        <span >{{ item.id }}</span>
+                    </td>
+                    <td class="text-center">
+                        <div class="fw-medium">{{ item.name }}</div>
+                        <small class="text-muted">@{{ item.username }}</small>
+                    </td>
+                    <td class="text-center">
+                        <a [href]="'mailto:' + item.email" class="text-decoration-none">
+                            <i class="bi bi-envelope me-1"></i>
+                            {{ item.email }}
+                        </a>
+                    </td>
+                    <td class="text-center">
+                        <div>{{ item.address.street }}</div>
+                        <small class="text-muted">{{ item.address.city }} {{ item.address.zipcode }}</small>
+                    </td>
+                    <td class="text-center">
+                        <a [href]="'tel:' + item.phone" class="text-decoration-none">
+                            <i class="bi bi-telephone me-1"></i>
+                            {{ item.phone }}
+                        </a>
+                    </td>
+                    <td class="text-center">
+                        <a [href]="'https://' + item.website" target="_blank" class="text-decoration-none">
+                            <i class="bi bi-globe me-1"></i>
+                            {{ item.website }}
+                        </a>
+                    </td>
+                    <td class="text-center">
+                        <div class="fw-medium">{{ item.company.name }}</div>
+                        <small class="text-muted">{{ item.company.catchPhrase }}</small>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary" 
+                                [title]="'แก้ไขข้อมูล ' + item.name">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+
+        <!-- Table Footer -->
+        <div class="d-flex justify-content-center align-items-center mt-3 p-2 bg-light rounded">
+            <small class="text-muted">
+                <i class="bi bi-info-circle me-1"></i>
+                แสดงข้อมูลผู้ใช้ทั้งหมด {{ userList().length }} รายการ
+            </small>
+        </div>
+    }
+
+    <!-- Empty State -->
+    @else {
+        <div class="text-center p-5">
+            <i class="bi bi-people fs-1 text-muted"></i>
+            <h5 class="text-muted mt-3">ยังไม่มีข้อมูล</h5>
+            <p class="text-muted">กดปุ่ม "โหลดข้อมูลผู้ใช้" เพื่อดูข้อมูล</p>
+        </div>
+    }
 </div>
+
+
+<!-- 1 Signals = state management แบบใหม่ของ Angular ใช้แทนหรือเสริม Observables ได้
+
+httpResource = API ใหม่ ใช้ดึงข้อมูลจาก HTTP แล้วผูกกับ Signals โดยตรง
+
+มันมี method/property สำคัญ เช่น:
+
+.status() → "idle" | "loading" | "resolved" | "error"
+
+.value() → ค่าที่ response กลับมา
+
+.isLoading() → boolean บอกว่ากำลังโหลดไหม
+
+.error() → error object (ถ้า fail)
+
+ข้อดี → ไม่ต้อง subscribe/unsubscribe เองเหมือน Observable
+
+
+
+
+2. Angular ก่อนหน้านี้ใช้ zone.js → เป็น library ที่ patch event ของ JS (เช่น click, setTimeout, Promise)
+
+เวลา event เกิดขึ้น zone.js จะ trigger → Angular จึงรู้ว่ามีการเปลี่ยน state แล้วสั่ง Change Detection (CD)
+
+Change Detection = กลไกที่ Angular ใช้ตรวจว่า data/state เปลี่ยนหรือไม่ แล้ว update DOM ให้ตรงกับข้อมูลล่าสุด
+
+ข้อเสีย: ทุกครั้งที่ event เกิด → Angular ต้องตรวจ ทั้ง component tree แม้เปลี่ยนแค่จุดเดียว
+
+3. Template Syntax ใหม่ (@if/@for/@else)
+
+
+4.SSR & Incremental Hydration   
+
+ของเดิม (SSR + Hydration)
+
+Server render HTML ทั้งหน้า ส่งให้ browser → ผู้ใช้เห็น content เร็วขึ้น
+
+แต่ตอนแรกยัง “ตาย” กดอะไรไม่ได้ → Angular ต้อง hydrate
+
+การ hydrate แบบเดิม = hydrate ทั้งหน้า พร้อมกัน → ช้า ถ้าหน้าใหญ่
+
+ของใหม่ (SSR + Incremental Hydration)
+
+Server render HTML ส่งมาเหมือนเดิม
+
+แต่ hydrate ทีละส่วน (per component) → เริ่มจากส่วนที่จำเป็น/มองเห็นก่อน เช่น ปุ่ม login, เมนู
+
+ทำให้ user ใช้งานบางส่วนได้เร็วกว่า โดยไม่ต้องรอ hydrate ทั้งหน้า -->
+
+
+
+
+
+
+
+
+<!-- Signals API + httpResource
+
+Angular v20 ทำให้ Signals API เสถียร และเพิ่ม httpResource สำหรับเรียก API แบบ reactive
+
+httpResource จะ เก็บผลลัพธ์ใน signal (คล้าย cache) → UI bind ได้ตรง ๆ โดยไม่ต้อง subscribe
+
+มี state ในตัว:
+
+status() → 'idle' | 'loading' | 'resolved' | 'error'
+
+isLoading() → boolean สั้น ๆ ใช้โชว์ loading ได้ง่าย
+
+value() → ค่าที่ API ส่งกลับมา (หรือ undefined ถ้ายังไม่มี)
+
+error() → error object ถ้า fail
+
+reload() → ยิง request ใหม่ได้ทันที -->
+<!-- 📝 สรุป Zoneless + Signals (Angular v20)
+
+Change Detection = กลไกที่ Angular ใช้ตรวจจับว่า state/data เปลี่ยนแปลงหรือไม่ แล้วอัปเดต DOM ให้ตรงกับข้อมูลล่าสุด
+
+ไม่มี zone.js → Angular จะไม่ทำ Change Detection (CD) ทั้ง tree อีกต่อไป
+
+Signal คือ trigger หลัก → เวลาค่า signal เปลี่ยน (เช่น dropdown เปลี่ยนค่า)
+
+Angular จะ อัปเดตเฉพาะ DOM node ที่ binding กับ signal นั้น
+
+ไม่ต้อง traversal เช็คทุก component → ทำให้ เร็วขึ้น, เบาลง, และ predictable
+
+👉 พูดง่าย ๆ: จากเดิม “ตรวจทั้งบ้านทุกครั้ง” → กลายเป็น “แก้เฉพาะห้องที่เปลี่ยน” 🏠✨ -->
+
+<!-- 
+SSR: Server สร้าง HTML ทั้งหน้าส่งให้ browser
+→ ผู้ใช้เห็นหน้าเว็บแล้ว แต่ยังเป็น static
+
+Hydration เริ่มต้น: Angular hydrate section สำคัญก่อน เช่น
+
+ปุ่ม login
+
+เมนูนำทาง (navbar)
+
+dropdown ที่ผู้ใช้เห็นทันที
+→ ตอนนี้ผู้ใช้สามารถ โต้ตอบกับบางส่วนได้แล้ว
+
+Hydration ส่วนอื่น: Angular ค่อย ๆ hydrate component ที่เหลือ เช่น
+
+sidebar
+
+footer
+
+widget เพิ่มเติม
+→ ทำงาน background โดยไม่บล็อกผู้ใช้ -->
+
+
+<!-- CSR = browser รับ JS แล้วค่อย render → กว่าจะใช้งานได้ ต้องรอ JS ทำงานทั้งหมด
+
+SSR = server สร้าง HTML มาให้ก่อน → เห็นหน้าทันที แต่ยังใช้งานไม่ได้ → ต้องรอ Hydration
+
+Incremental Hydration (Angular v20) = hydrate ทีละส่วน → ให้ user กดได้เร็วขึ้น -->
