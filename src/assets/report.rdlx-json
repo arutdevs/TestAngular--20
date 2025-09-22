@@ -1,0 +1,15 @@
+{
+  "Name": "Report1",
+  "Body": {
+    "ReportItems": [
+      {
+        "Type": "textbox",
+        "Name": "TextBox1",
+        "Value": "Hello ActiveReportsJS!",
+        "Style": { "FontSize": "20pt", "Color": "Blue" },
+        "Width": "6in",
+        "Height": "1in"
+      }
+    ]
+  }
+}

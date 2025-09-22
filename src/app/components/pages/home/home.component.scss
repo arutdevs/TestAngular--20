@@ -1,0 +1,70 @@
+.login {
+  font-weight: bold;
+}
+
+.input-group .form-control {
+  border-top-right-radius: 0.625rem !important;
+  border-bottom-right-radius: 0.625rem !important;
+}
+
+.img-fluid {
+  width: auto;
+  max-width: 100%;
+  max-height: 100px;
+  object-fit: contain;
+}
+
+.form-check-input {
+  height: 25px;
+  width: 40px;
+}
+.container {
+  margin-top: -35px;
+}
+.icon-user {
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+.input-box {
+  position: relative;
+}
+.input-box input {
+  width: 100%;
+  padding: 10px 15px 10px 40px;
+  // background: #F0F2F7;
+  border-radius: 15px;
+  // border: none;
+  // outline: none;
+  font-size: 16px;
+  // color: #333;
+  // font-weight: 500;
+}
+
+.input-box input::placeholder {
+  color: #afb4bf;
+  //  font-weight: 400;
+}
+
+.input-box i {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+
+  &::before {
+    position: absolute;
+    left: 10px;
+    top: 35%;
+    transform: translateY(-50%);
+    font-size: 20px;
+  }
+}
+.form-check-label {
+  margin-left: 5px;
+  padding-top: 2px;
+}
+.btn-primary {
+  height: 45px;
+}

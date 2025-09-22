@@ -1,0 +1,69 @@
+<!-- Logo/Header with original class -->
+
+<div class="header-shape text-center mb-1">
+    <div class="header">
+        <img src="assets/images/logo-system.png" alt="Logo" class="img-fluid" style="max-height: 100px;" />
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-4 col-md-8 col-sm-10">
+            <!-- Login Form without background -->
+            <div class="p-3">
+                <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+                    <h2 class="text-left login mb-4">เข้าสู่ระบบ</h2>
+
+                    <!-- Username Field -->
+
+                    <div class="mb-3">
+                        <label for="username" class="form-label">ชื่อผู้ใช้</label>
+                        <div class="input-box">
+                            <i class="icon-user" [style.top]="isFieldInvalid('username') ? '32%' : null"></i>
+                            <input type="text" class="form-control" id="username" placeholder="กรุณากรอกชื่อผู้ใช้"
+                                formControlName="username" [class.is-invalid]="isFieldInvalid('username')" />
+                            <div class="invalid-feedback">กรุณากรอกชื่อผู้ใช้</div>
+                        </div>
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="mb-3">
+                        <label for="password" class="form-label">รหัสผ่าน</label>
+                        <div class="input-box">
+
+                            <i class="icon-key" [style.top]="isFieldInvalid('password') ? '32%' : null"></i>
+
+                            <input type="password" class="form-control" id="password" placeholder="กรุณาใส่รหัสผ่าน"
+                                formControlName="password" [class.is-invalid]="isFieldInvalid('password')" />
+                            <div class="invalid-feedback">กรุณากรอกรหัสผ่าน</div>
+                        </div>
+                    </div>
+
+                    <!-- Remember Me -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="form-check form-switch">
+                            <input type="checkbox" class="form-check-input " id="rememberMe"
+                                formControlName="rememberMe" />
+                            <label class="form-check-label " for="rememberMe">
+                                จดจำชื่อผู้ใช้งาน
+                            </label>
+                        </div>
+                        <a routerLink="/auth/forgot-password" class="text-decoration-none">
+                            ลืมรหัสผ่าน?
+                        </a>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid gap-2 mt-2">
+                        <button type="submit" class="btn btn-primary" [disabled]="loginForm.invalid">
+                            เข้าสู่ระบบ
+                        </button>
+                    </div>
+                    <div class="d-flex justify-content-end align-items-center pt-2 mb-3 text-version">
+                        {{version}}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

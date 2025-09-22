@@ -1,0 +1,47 @@
+<div class="table-responsive line-border-top mb-3">
+    <table class="table table-striped table-hover mt-2 table-borderless align-middle">
+        <thead class="table-light">
+            <tr class="text-center">
+                <th scope="col">ลำดับ</th>
+                <th scope="col" [width]="150">รหัสพนักงาน</th>
+                <th scope="col">ชื่อ-นามสกุล</th>
+                <th scope="col">ตำแหน่ง</th>
+                <th scope="col">แผนก</th>
+                <th scope="col">ฝ่าย</th>
+
+                <th scope="col">ประเภท</th>
+                <th scope="col">Email</th>
+                <th scope="col">สถานะ</th>
+                <th scope="col" [width]="50"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (item of employeeList(); track item.empcode; let i = $index) {
+            <tr>
+                <td class="center-middle">{{ i + 1 }}</td>
+                <td class="center-middle">{{ item.empcode }}</td>
+                <td class="left-middle">{{ item.empnamelocal }} {{ item.empsurnamelocal }}</td>
+                <td class="left-middle">{{ item.emppositionlocal }}</td>
+                <td class="left-middle">{{ item.empdepartmentlocal }}</td>
+                <td class="left-middle">{{ item.empdivisionlocal }}</td>
+                <td class="center-middle">{{ item.emptypename }}</td>
+                <td class="left-middle">{{ item.empemail }}</td>
+                <td class="center-middle ">
+                    <span [ngClass]="{
+        'border-in': item.empstatus === '01',
+        'border-stay': item.empstatus === '02',
+        'border-out': item.empstatus === '03',
+        'border-unknown': item.empstatus !== '01' && item.empstatus !== '02' && item.empstatus !== '03'
+      }">
+                        {{ item.empstatus === '01' ? 'พนักงาน' : item.empstatus === '02' ? 'พักงาน' : item.empstatus ===
+                        '03' ? 'ลาออก' : 'ไม่ระบุ' }}
+                    </span>
+                </td>
+                <td class="center-middle">
+                    <i class="icon-btn icon-edit"></i>
+                </td>
+            </tr>
+            }
+        </tbody>
+    </table>
+</div>
