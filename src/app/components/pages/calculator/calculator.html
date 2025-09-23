@@ -1,0 +1,119 @@
+<div class="calculator-container">
+    <!-- Header -->
+    <div class="calculator-header">
+        <h2>Calculator</h2>
+        <button class="mode-toggle" (click)="toggleScientificMode()" [class.active]="isScientificMode">
+            {{ isScientificMode ? 'Standard' : 'Scientific' }}
+        </button>
+    </div>
+
+    <!-- Display Area -->
+    <div class="display-area">
+        <!-- Operator Display -->
+        <div class="operator-display" *ngIf="operator && previousValue !== 0">
+            {{ previousValue }} {{ getOperatorDisplay() }}
+        </div>
+
+        <!-- Main Display -->
+        <div class="main-display" [class.error]="errorMessage">
+            {{ errorMessage || display }}
+        </div>
+
+        <!-- Memory Indicator -->
+        <div class="memory-indicator" *ngIf="hasMemory()">
+            M: {{ memory }}
+        </div>
+    </div>
+
+    <!-- Calculator Body -->
+    <div class="calculator-body">
+
+        <!-- Memory Functions (always visible) -->
+        <div class="memory-section">
+            <button class="btn btn-memory" (click)="memoryClear()" [disabled]="!hasMemory()">MC</button>
+            <button class="btn btn-memory" (click)="memoryRecall()" [disabled]="!hasMemory()">MR</button>
+            <button class="btn btn-memory" (click)="memoryStore()">MS</button>
+            <button class="btn btn-memory" (click)="memoryAdd()">M+</button>
+            <button class="btn btn-memory" (click)="memorySubtract()">M-</button>
+        </div>
+
+        <!-- Scientific Functions (conditional) -->
+        <div class="scientific-section" *ngIf="isScientificMode">
+            <button class="btn btn-function" (click)="sin()">sin</button>
+            <button class="btn btn-function" (click)="cos()">cos</button>
+            <button class="btn btn-function" (click)="power()">x²</button>
+            <button class="btn btn-function" (click)="sqrt()">√</button>
+        </div>
+
+        <!-- Main Calculator Grid -->
+        <div class="calculator-grid" [class.scientific]="isScientificMode">
+
+            <!-- Row 1: Clear functions -->
+            <button class="btn btn-clear" (click)="clear()">C</button>
+            <button class="btn btn-clear" (click)="clearEntry()">CE</button>
+            <button class="btn btn-clear" (click)="backspace()">⌫</button>
+            <button class="btn btn-operator" (click)="inputOperator('/')" [class.active]="operator === '/'">÷</button>
+
+            <!-- Row 2: Numbers and operators -->
+            <button class="btn btn-number" (click)="inputNumber('7')">7</button>
+            <button class="btn btn-number" (click)="inputNumber('8')">8</button>
+            <button class="btn btn-number" (click)="inputNumber('9')">9</button>
+            <button class="btn btn-operator" (click)="inputOperator('*')" [class.active]="operator === '*'">×</button>
+
+            <!-- Row 3 -->
+            <button class="btn btn-number" (click)="inputNumber('4')">4</button>
+            <button class="btn btn-number" (click)="inputNumber('5')">5</button>
+            <button class="btn btn-number" (click)="inputNumber('6')">6</button>
+            <button class="btn btn-operator" (click)="inputOperator('-')" [class.active]="operator === '-'">-</button>
+
+            <!-- Row 4 -->
+            <button class="btn btn-number" (click)="inputNumber('1')">1</button>
+            <button class="btn btn-number" (click)="inputNumber('2')">2</button>
+            <button class="btn btn-number" (click)="inputNumber('3')">3</button>
+            <button class="btn btn-operator" (click)="inputOperator('+')" [class.active]="operator === '+'"
+                rowspan="2">+</button>
+
+            <!-- Row 5 -->
+            <button class="btn btn-function" (click)="toggleSign()">±</button>
+            <button class="btn btn-number" (click)="inputNumber('0')">0</button>
+            <button class="btn btn-function" (click)="inputDecimal()">.</button>
+
+            <!-- Equals button -->
+            <button class="btn btn-equals" (click)="calculate()" [disabled]="!canCalculate()"
+                [class.disabled]="!canCalculate()">
+                =
+            </button>
+
+        </div>
+
+        <!-- Additional Functions -->
+        <div class="additional-functions">
+            <button class="btn btn-function" (click)="percentage()">%</button>
+            <button class="btn btn-function" (click)="sqrt()" *ngIf="!isScientificMode">√</button>
+        </div>
+
+    </div>
+
+    <!-- History Section -->
+    <div class="history-section" *ngIf="history.length > 0">
+        <div class="history-header">
+            <h3>History</h3>
+            <button class="btn btn-clear-history" (click)="clearHistory()">Clear</button>
+        </div>
+        <div class="history-list">
+            <div class="history-item" *ngFor="let item of history; let i = index" [class.recent]="i === 0">
+                {{ item }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Message Display -->
+    <div class="error-section" *ngIf="errorMessage">
+        <div class="error-message">
+            <span class="error-icon">⚠️</span>
+            {{ errorMessage }}
+            <button class="btn btn-close-error">×</button>
+        </div>
+    </div>
+
+</div>
