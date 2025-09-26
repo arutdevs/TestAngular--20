@@ -3,7 +3,7 @@ import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-calculator',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './calculator.html',
   styleUrl: './calculator.scss',
 })
@@ -150,22 +150,28 @@ export class Calculator {
   /**
    * กดปุ่ม equals
    */
-  calculate(): void {
-    if (this.operator && !this.waitingForNewValue) {
-      const result = this.calculateResult();
+  calculate() {
+    // ตรวจสอบว่ามี operator และไม่มี error
+    if (!this.canCalculate()) {
+      return;
+    }
 
-      if (result !== null) {
-        // เพิ่มลง history
-        const operation = `${this.previousValue} ${this.operator} ${this.currentValue} = ${result}`;
-        this.addToHistory(operation);
+    // คำนวณผลลัพธ์
+    const result = this.calculateResult();
 
-        this.display = this.formatNumber(result);
-        this.currentValue = result;
-        this.previousValue = 0;
-        this.operator = null;
-        this.waitingForNewValue = true;
-        this.isDecimalMode = false;
-      }
+    if (result !== null) {
+      // เพิ่มประวัติ
+      this.addToHistory(
+        `${this.previousValue} ${this.getOperatorDisplay()} ${this.currentValue} = ${result}`
+      );
+
+      // อัปเดต state
+      this.currentValue = result;
+      this.display = this.formatNumber(result);
+      this.previousValue = 0;
+      this.operator = null;
+      this.waitingForNewValue = true;
+      this.isDecimalMode = false;
     }
   }
 
